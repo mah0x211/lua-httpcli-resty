@@ -2,3 +2,140 @@ lua-httpcli-resty
 =========
 
 Lua HTTP client module for OpenResty.
+
+---
+
+## Dependencies
+
+- httpcli: https://github.com/mah0x211/lua-httpcli
+
+
+## Installation
+
+```sh
+luarocks install --from=http://mah0x211.github.io/rocks/ httpcli-resty
+```
+
+or 
+
+```sh
+git clone https://github.com/mah0x211/lua-httpcli-resty.git
+cd lua-httpconsts
+luarocks make rockspecs/httpcli-resty-<version>.rockspec
+```
+
+## Usage
+
+this module will be sending the http request via `ngx.location.capture` API of OpenResty. please see https://github.com/openresty/lua-nginx-module/#ngxlocationcapture for more details of that API and behavior.
+
+
+**Supported Method**
+
+- OPTIONS
+- GET
+- HEAD
+- POST
+- PUT
+- DELETE
+- TRACE
+- CONNECT
+- PATCH
+
+**Example nginx.conf**
+
+```
+daemon off;
+worker_processes    1;
+
+events {
+    worker_connections  1024;
+    accept_mutex_delay  100ms;
+}
+
+
+http {
+    sendfile            on;
+    tcp_nopush          on;
+    #keepalive_timeout  0;
+    keepalive_requests  500000;
+    #gzip               on;
+    open_file_cache     max=100;
+    include             mime.types;
+    default_type        text/html;
+    index               index.htm;
+    resolver            8.8.8.8;
+    resolver_timeout    5;
+    
+    #
+    # log settings
+    #
+    access_log  off;
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    
+    
+    # 
+    # lua global settings
+    #
+    lua_check_client_abort  on;
+    lua_code_cache          on;
+    
+    #
+    # initialize script
+    #
+    init_by_lua "HttpCliResty = require('httpcli.resty');";
+    
+    #
+    # Admin Console
+    #
+    server {
+        listen      1080;
+        root        html;
+        
+        #
+        # content handler: html
+        #
+        location ~* \.(html|htm)$ {
+            content_by_lua "
+                local inspect = require('util').inspect;
+                local SYMBOLS = {
+                    ['<'] = '&lt;',
+                    ['>'] = '&gt;'
+                };
+                local cli, err = HttpCliResty.new('/proxy_gateway');
+                local res;
+                
+                if err then
+                    res = err;
+                else
+                    local entity;
+                    
+                    entity, err = cli:get('http://example.com/');
+                    if err then
+                        res = err;
+                    else
+                        res = inspect( entity );
+                    end
+                end
+                
+                ngx.say( '<pre>' .. res:gsub('[<>]', SYMBOLS ) .. '</pre>' );
+            ";
+        }
+        
+        #
+        # proxy
+        #
+        location /proxy_gateway {
+            internal;
+            rewrite_by_lua          "HttpCliResty.proxy();";
+            proxy_redirect          off;
+            proxy_connect_timeout   60;
+            proxy_send_timeout      60;
+            proxy_read_timeout      60;
+            proxy_pass              $uri;
+            proxy_pass_request_body on;
+        }
+    }
+}
+```
