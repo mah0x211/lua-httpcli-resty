@@ -64,8 +64,8 @@ function Resty:init( gateway, ... )
 end
 
 
-function Resty:request( req, timeout )
-    local entity = ngx.location.capture( protected(self).gateway, {
+function Resty:request( req )
+    return ngx.location.capture( protected(self).gateway, {
         method = req.method,
         body = req.body,
         ctx = {
@@ -74,8 +74,6 @@ function Resty:request( req, timeout )
             timeout = timeout
         }
     });
-    
-    return entity;
 end
 
 
