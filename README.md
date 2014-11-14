@@ -20,7 +20,7 @@ or
 
 ```sh
 git clone https://github.com/mah0x211/lua-httpcli-resty.git
-cd lua-httpconsts
+cd lua-httpcli-resty
 luarocks make rockspecs/httpcli-resty-<version>.rockspec
 ```
 
