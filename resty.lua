@@ -70,8 +70,7 @@ function Resty:request( req )
         body = req.body,
         ctx = {
             uri = req.uri,
-            header = req.header,
-            timeout = timeout
+            header = req.header
         }
     });
 end
