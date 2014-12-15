@@ -13,16 +13,9 @@ Lua HTTP client module for OpenResty.
 ## Installation
 
 ```sh
-luarocks install --from=http://mah0x211.github.io/rocks/ httpcli-resty
+luarocks install httpcli-resty --from=http://mah0x211.github.io/rocks/
 ```
 
-or 
-
-```sh
-git clone https://github.com/mah0x211/lua-httpcli-resty.git
-cd lua-httpcli-resty
-luarocks make rockspecs/httpcli-resty-<version>.rockspec
-```
 
 ## Usage
 
@@ -109,9 +102,27 @@ http {
                 if err then
                     res = err;
                 else
+                    local timeoutForThisRequest = 30;
                     local entity;
-                    
-                    entity, err = cli:get('http://example.com/');
+                    -- also, can be pass the https url
+                    entity, err = cli:get( 'http://example.com/', {
+                        -- query    = <table>,
+                        -- header   = <table>,
+                        -- body     = <string or table>,
+                        -- enctype  = <encoding-type string>
+                        --            supported enctype:
+                        --              * 'application/json'
+                        --              * 'application/x-www-form-urlencoded'
+                        -- failover = <failover-address table>
+                        --            format: [scheme://]host[:port]
+                        --            scheme: http or https
+                        --            port: 0 - 65535
+                        --            e.g.: {
+                        --              'https://localhost',
+                        --              this format will inherit a scheme of url argument
+                        --              '127.0.0.1:8080'
+                        --            }
+                    }, timeoutForThisRequest );
                     if err then
                         res = err;
                     else
