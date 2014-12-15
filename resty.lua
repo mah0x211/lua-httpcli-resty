@@ -30,6 +30,14 @@
 -- modules
 local HttpCli = require('httpcli');
 -- constants
+local FAILOVER_STATUS = {
+    -- bad gateway
+    ['502'] = true,
+    -- service unavailable
+    ['503'] = true,
+    -- gateway timedout
+    ['504'] = true
+};
 local METHOD = {};
 -- append method
 for _, m in ipairs({
@@ -65,14 +73,35 @@ end
 
 
 function Resty:request( req )
-    return ngx.location.capture( protected(self).gateway, {
-        method = req.method,
-        body = req.body,
-        ctx = {
-            uri = req.uri,
-            header = req.header
-        }
-    });
+    local failover = {
+        host = req.host,
+        uri = req.uri
+    };
+    local gateway = protected(self).gateway;
+    local nfail = 0;
+    local entity;
+    
+    repeat
+        req.header['Host'] = failover.host;
+        entity = ngx.location.capture( gateway, {
+            method = req.method,
+            body = req.body,
+            ctx = {
+                uri = failover.uri,
+                header = req.header
+            }
+        });
+        -- gateway timedout
+        if FAILOVER_STATUS[tostring(entity.status)] then
+            -- check failover
+            nfail = nfail + 1;
+            failover = req.failover[nfail];
+        else
+            return entity;
+        end
+    until not failover;
+    
+    return entity;
 end
 
 
