@@ -58,6 +58,7 @@ function Resty.proxy()
     for k, v in pairs( ctx.header ) do
         ngx.req.set_header( k, v );
     end
+    ctx.latency = ngx.now();
 end
 
 
@@ -79,17 +80,18 @@ function Resty:request( req )
     };
     local gateway = protected(self).gateway;
     local nfail = 0;
-    local entity;
+    local entity, ctx;
     
     repeat
         req.header['Host'] = failover.host;
+        ctx = {
+            uri = failover.uri,
+            header = req.header
+        };
         entity = ngx.location.capture( gateway, {
             method = req.method,
             body = req.body,
-            ctx = {
-                uri = failover.uri,
-                header = req.header
-            }
+            ctx = ctx
         });
         -- gateway timedout
         if FAILOVER_STATUS[tostring(entity.status)] then
@@ -97,6 +99,7 @@ function Resty:request( req )
             nfail = nfail + 1;
             failover = req.failover[nfail];
         else
+            entity.latency = ngx.now() - ctx.latency;
             return entity;
         end
     until not failover;
