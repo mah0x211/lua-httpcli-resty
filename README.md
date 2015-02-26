@@ -31,7 +31,6 @@ this module will be sending the http request via `ngx.location.capture` API of O
 - PUT
 - DELETE
 - TRACE
-- CONNECT
 - PATCH
 
 **Example nginx.conf**
