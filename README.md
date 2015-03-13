@@ -138,6 +138,10 @@ http {
         #
         location /proxy_gateway {
             internal;
+            #
+            # HttpCliResty.proxy( [inheritHeaders:boolean] )
+            # please pass true if you need to inherit headers of parent request.
+            #
             rewrite_by_lua          "HttpCliResty.proxy();";
             proxy_redirect          off;
             proxy_connect_timeout   60;
