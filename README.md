@@ -140,7 +140,7 @@ http {
             internal;
             #
             # HttpCliResty.proxy( [inheritHeaders:boolean] )
-            # please pass true if you need to inherit headers of parent request.
+            # please pass false if you need to remove headers of parent request.
             #
             rewrite_by_lua          "HttpCliResty.proxy();";
             proxy_redirect          off;

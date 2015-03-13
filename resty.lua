@@ -55,7 +55,7 @@ function Resty.proxy( inheritHeaders )
     local ctx = ngx.ctx;
     
     -- remove all parent header
-    if inheritHeaders ~= true then
+    if inheritHeaders == false then
         for k, v in pairs( ngx.req.get_headers() ) do
             ngx.req.set_header( k, nil );
         end
