@@ -11,7 +11,7 @@ description = {
 }
 dependencies = {
     "lua >= 5.1",
-    "httpcli >= 1.3.0"
+    "httpcli >= 1.3.1"
 }
 build = {
     type = "builtin",
