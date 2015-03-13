@@ -51,13 +51,22 @@ end
 local Resty = require('halo').class.Resty;
 
 
-function Resty.proxy()
+function Resty.proxy( inheritHeaders )
     local ctx = ngx.ctx;
     
+    -- remove all parent header
+    if inheritHeaders ~= true then
+        for k, v in pairs( ngx.req.get_headers() ) do
+            ngx.req.set_header( k, nil );
+        end
+    end
+    
+    -- set client specified uri and headers
     ngx.req.set_uri( ctx.uri, false );
     for k, v in pairs( ctx.header ) do
         ngx.req.set_header( k, v );
     end
+    -- save request time
     ctx.latency = ngx.now();
 end
 
@@ -99,6 +108,7 @@ function Resty:request( req )
             nfail = nfail + 1;
             failover = req.failover[nfail];
         else
+            -- calculate latency
             entity.latency = ngx.now() - ctx.latency;
             return entity;
         end
