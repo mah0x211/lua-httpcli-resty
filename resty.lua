@@ -66,8 +66,6 @@ function Resty.proxy( inheritHeaders )
     for k, v in pairs( ctx.header ) do
         ngx.req.set_header( k, v );
     end
-    -- save request time
-    ctx.latency = ngx.now();
 end
 
 
@@ -95,7 +93,9 @@ function Resty:request( req )
         req.header['Host'] = failover.host;
         ctx = {
             uri = failover.uri,
-            header = req.header
+            header = req.header,
+            -- save request time
+            latency = ngx.now()
         };
         entity = ngx.location.capture( gateway, {
             method = req.method,
